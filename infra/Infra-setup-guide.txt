@@ -83,7 +83,7 @@ Outputs:
 - `lambda_function_name` — `cicd-debugger`
 - `ecr_repository_url` — `980921745255.dkr.ecr.us-east-1.amazonaws.com/cicd-debugger`
 
------
+-------
 
 ## Current state
 

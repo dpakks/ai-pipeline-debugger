@@ -2,7 +2,7 @@ name: Test Pipeline (intentional failure)
 
 on:
   push:
-    branches: [tb-1]
+    branches: [testing-bot]
 
 jobs:
   build:
