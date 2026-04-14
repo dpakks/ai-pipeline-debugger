@@ -1,4 +1,4 @@
-# AI Pipeline Debugger
+# LLM Assisted Pipeline Debugger
 
 An AI-powered bot that automatically diagnoses CI/CD pipeline failures and posts root-cause analysis with suggested fixes directly on your GitHub Pull Requests.
 
