@@ -1,0 +1,17 @@
+name: Test Pipeline (intentional failure)
+
+on:
+  push:
+    branches: [test/verify-bot]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: This will fail
+        run: |
+          echo "Installing dependencies..."
+          npm install nonexistent-package-12345
