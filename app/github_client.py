@@ -42,7 +42,7 @@ class GitHubClient:
     def get_pr_for_branch(self, repo: str, branch: str) -> int | None:
         """Find the open PR number associated with a branch."""
         url = f"{BASE_URL}/repos/{repo}/pulls"
-        params = {"head": f"{repo.split('/')[0]}:{branch}", "state": "open"}
+        params = {"state": "open", "head": f"{repo.split('/')[0]}:{branch}"}
         response = requests.get(url, headers=self.headers, params=params)
 
         if response.status_code != 200:
@@ -50,7 +50,21 @@ class GitHubClient:
             return None
 
         pulls = response.json()
-        return pulls[0]["number"] if pulls else None
+        if pulls:
+            return pulls[0]["number"]
+
+        # Fallback: search without head filterrr
+        params = {"state": "open"}
+        response = requests.get(url, headers=self.headers, params=params)
+        if response.status_code != 200:
+            return None
+
+        pulls = response.json()
+        for pr in pulls:
+            if pr["head"]["ref"] == branch:
+                return pr["number"]
+
+        return None
 
     def get_pr_diff(self, repo: str, pr_number: int) -> str:
         """Fetch the diff of a pull request."""
