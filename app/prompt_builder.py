@@ -11,7 +11,7 @@ class PromptBuilder:
     def build(self, logs: str, diff: str, repo: str, branch: str) -> dict:
         """Build the full prompt with all available context."""
         sections = [
-            f"## CI/CD Pipeline Failure Analysis Request",
+            "## CI/CD Pipeline Failure Analysis Request",
             f"**Repository:** {repo}",
             f"**Branch:** {branch}",
             "",
