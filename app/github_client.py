@@ -134,7 +134,7 @@ class GitHubClient:
         if pulls:
             return pulls[0]["number"]
 
-        # Fallback: search without head filter
+        # Fallback: search without head filterrr
         params = {"state": "open"}
         response = requests.get(url, headers=self.headers, params=params)
         if response.status_code != 200:
