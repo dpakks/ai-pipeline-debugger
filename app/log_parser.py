@@ -26,11 +26,11 @@ class LogParser:
 
     # Noise patterns to strip out
     NOISE_PATTERNS = [
-        re.compile(r"\x1b\[[0-9;]*m"),           # ANSI color codes
-        re.compile(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*"),  # ISO timestamps
-        re.compile(r"^##\[debug\].*$", re.MULTILINE),    # GitHub debug lines
-        re.compile(r"^##\[group\].*$", re.MULTILINE),    # GitHub group markers
-        re.compile(r"^##\[endgroup\].*$", re.MULTILINE), # GitHub endgroup markers
+        re.compile(r"\x1b\[[0-9;]*m"),                      # ANSI color codes
+        re.compile(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*"),      # ISO timestamps
+        re.compile(r"^##\[debug\].*$", re.MULTILINE),        # GitHub debug lines
+        re.compile(r"^##\[group\].*$", re.MULTILINE),        # GitHub group markers
+        re.compile(r"^##\[endgroup\].*$", re.MULTILINE),     # GitHub endgroup markers
     ]
 
     def parse(self, raw_logs: str) -> str:

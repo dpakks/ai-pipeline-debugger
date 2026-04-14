@@ -58,7 +58,6 @@ def handler(event, context):
     # Step 5: Extract details from the payload
     repo_full_name = payload["repository"]["full_name"]
     run_id = workflow_run["id"]
-    head_sha = workflow_run["head_sha"]
     head_branch = workflow_run["head_branch"]
 
     logger.info(f"Processing failure — repo: {repo_full_name}, run: {run_id}")
