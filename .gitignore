@@ -5,6 +5,7 @@
 .terraform.lock.hcl
 *.tfplan
 tfplan
+**/*.tfvars
 
 # Python
 __pycache__/
