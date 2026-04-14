@@ -10,9 +10,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
 from handler import handler, verify_signature
 
 
-# -----------------------------------------------
+# ------------------------------------------------
 # Helper: build a fake webhook event
-# -----------------------------------------------
+# ------------------------------------------------
 def build_event(payload: dict, secret: str = "test-secret") -> dict:
     """Build a fake API Gateway event with a signed webhook body."""
     body = json.dumps(payload)
