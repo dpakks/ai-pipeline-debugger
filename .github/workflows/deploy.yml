@@ -1,0 +1,118 @@
+name: Deploy Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: [infra/**, bootstrap/**, "*.md"]
+  pull_request:
+    branches: [main]
+    paths-ignore: [infra/**, bootstrap/**, "*.md"]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: cicd-debugger
+  LAMBDA_FUNCTION: cicd-debugger
+
+jobs:
+  # ---- Job 1: Lint and Test ----
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r app/requirements.txt
+          pip install pytest flake8
+
+      - name: Lint
+        run: flake8 app/ --max-line-length=120 --ignore=E501
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+  # ---- Job 2: Build and Push Docker Image ----
+  build:
+    name: Build & Push
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.ECR_REPOSITORY }}:latest \
+                       -t ${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
+
+      - name: Tag and Push to ECR
+        run: |
+          ECR_URL=${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+          docker tag ${{ env.ECR_REPOSITORY }}:latest $ECR_URL:latest
+          docker tag ${{ env.ECR_REPOSITORY }}:${{ github.sha }} $ECR_URL:${{ github.sha }}
+          docker push $ECR_URL:latest
+          docker push $ECR_URL:${{ github.sha }}
+
+  # ---- Job 3: Deploy to Lambda ----
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Update Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION }} \
+            --image-uri ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            --publish
+
+      - name: Wait for Lambda update
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_FUNCTION }}
+
+      - name: Verify deployment
+        run: |
+          STATUS=$(aws lambda get-function-configuration \
+            --function-name ${{ env.LAMBDA_FUNCTION }} \
+            --query 'LastUpdateStatus' --output text)
+          if [ "$STATUS" != "Successful" ]; then
+            echo "Deployment failed — status: $STATUS"
+            exit 1
+          fi
+          echo "Deployment successful"
