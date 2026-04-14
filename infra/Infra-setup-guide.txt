@@ -1,0 +1,97 @@
+# Infrastructure Setup Guide
+
+## Why we push the Docker image to ECR first
+
+Lambda is configured to run a Docker container. When Terraform tries to create the Lambda function, it looks for the Docker image at the ECR URL we specified (`980921745255.dkr.ecr.us-east-1.amazonaws.com/cicd-debugger:latest`). If that image doesn't exist yet, Lambda creation fails.
+
+So the order is:
+1. Create ECR (the storage) with Terraform
+2. Push a Docker image into ECR (fill the storage)
+3. Create Lambda with Terraform (now it can find the image).
+
+This is a one-time chicken-and-egg problem. After the initial setup, the CI/CD pipeline handles the build → push → deploy cycle automatically.
+
+
+
+## Step-by-step: What we did
+
+### 1. Bootstrap (one-time, manual)
+
+Created S3 bucket, DynamoDB lock table, and IAM role for GitHub Actions.
+
+```bash
+cd bootstrap
+terraform init
+terraform apply
+```
+
+Outputs we saved:
+- `state_bucket_name` = `cicd-debugger-tf-state`
+- `lock_table_name` = `cicd-debugger-tf-locks`
+- `github_actions_role_arn` = `arn:aws:iam::980921745255:role/cicd-debugger-github-actions`
+
+### 2. Added GitHub secret
+
+In repo Settings → Secrets and variables → Actions:
+- `AWS_ROLE_ARN` = the role ARN from bootstrap output
+
+### 3. Created infra resources (first pass — without Lambda)
+
+Commented out Lambda-related code in `lambda.tf`, `api_gateway.tf` (integration + route), and `outputs.tf` (webhook_url + lambda_function_name) because Lambda needs a Docker image that doesn't exist yet.
+
+```bash
+cd infra
+terraform init
+terraform apply -auto-approve
+```
+
+This created: ECR, IAM roles, API Gateway (partial), CloudWatch log groups.
+
+### 4. Built and pushed Docker image to ECR
+
+```bash
+cd ..
+
+# Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 980921745255.dkr.ecr.us-east-1.amazonaws.com
+
+# Build for linux/amd64 with no attestation manifest (Lambda requirement)
+docker buildx build --platform linux/amd64 --provenance=false --no-cache -t 980921745255.dkr.ecr.us-east-1.amazonaws.com/cicd-debugger:latest .
+
+# Push to ECR
+docker push 980921745255.dkr.ecr.us-east-1.amazonaws.com/cicd-debugger:latest
+```
+
+**Important flags:**
+- `--platform linux/amd64` — Lambda runs on Linux x86, not Windows/ARM
+- `--provenance=false` — Docker Desktop adds attestation manifests by default, Lambda doesn't support them
+- `--no-cache` — Forces a clean rebuild from scratch
+
+### 5. Created remaining infra (second pass — with Lambda)
+
+Uncommented everything in `lambda.tf`, `api_gateway.tf`, and `outputs.tf`.
+
+```bash
+cd infra
+terraform apply -auto-approve
+```
+
+This created: Lambda function, API Gateway integration + route, Lambda permission.
+
+Outputs:
+- `webhook_url` — the public URL GitHub will send failure events to
+- `lambda_function_name` — `cicd-debugger`
+- `ecr_repository_url` — `980921745255.dkr.ecr.us-east-1.amazonaws.com/cicd-debugger`
+
+-----
+
+## Current state
+
+All AWS infrastructure is live:
+- S3 bucket (Terraform state)
+- DynamoDB table (state locking)
+- IAM roles (GitHub Actions + Lambda)
+- ECR repository (Docker image storage)
+- Lambda function (running our Dockerized debugger)
+- API Gateway (public webhook endpoint)
+- CloudWatch log groups (Lambda + API Gateway logs)
