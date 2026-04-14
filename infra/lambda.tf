@@ -13,6 +13,7 @@ resource "aws_lambda_function" "debugger" {
     variables = {
       BEDROCK_MODEL_ID      = var.bedrock_model_id
       GITHUB_WEBHOOK_SECRET = var.github_webhook_secret
+      GITHUB_TOKEN          = var.github_token
       AWS_REGION_NAME       = var.aws_region
     }
   }
