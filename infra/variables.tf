@@ -25,11 +25,17 @@ variable "lambda_memory" {
 variable "bedrock_model_id" {
   description = "AWS Bedrock model ID for LLM"
   type        = string
-  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  default     = "anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
 variable "github_webhook_secret" {
   description = "Secret token to validate incoming GitHub webhooks"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for reading logs and posting PR comments"
   type        = string
   sensitive   = true
 }
