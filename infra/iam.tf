@@ -57,6 +57,14 @@ resource "aws_iam_role_policy" "lambda_bedrock" {
           "bedrock:InvokeModel"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "aws-marketplace:ViewSubscriptions",
+          "aws-marketplace:Subscribe"
+        ]
+        Resource = "*"
       }
     ]
   })
