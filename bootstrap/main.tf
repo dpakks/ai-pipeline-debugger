@@ -66,20 +66,10 @@ resource "aws_dynamodb_table" "terraform_locks" {
 # -----------------------------------------------
 # IAM OIDC provider for GitHub Actions
 # -----------------------------------------------
-data "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
-}
-
 resource "aws_iam_openid_connect_provider" "github" {
-  count = length(try(data.aws_iam_openid_connect_provider.github.arn, "")) > 0 ? 0 : 1
-
   url             = "https://token.actions.githubusercontent.com"
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
-}
-
-locals {
-  oidc_provider_arn = length(try(data.aws_iam_openid_connect_provider.github.arn, "")) > 0 ? data.aws_iam_openid_connect_provider.github.arn : aws_iam_openid_connect_provider.github[0].arn
 }
 
 # -----------------------------------------------
@@ -94,7 +84,7 @@ resource "aws_iam_role" "github_actions" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = local.oidc_provider_arn
+          Federated = aws_iam_openid_connect_provider.github.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {

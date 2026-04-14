@@ -33,3 +33,9 @@ variable "github_webhook_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "github_token" {
+  description = "GitHub Personal Access Token for reading logs and posting PR comments"
+  type        = string
+  sensitive   = true
+}

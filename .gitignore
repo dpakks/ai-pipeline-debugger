@@ -4,6 +4,7 @@
 .terraform/
 .terraform.lock.hcl
 *.tfplan
+*.tfvars
 tfplan
 
 # Python
