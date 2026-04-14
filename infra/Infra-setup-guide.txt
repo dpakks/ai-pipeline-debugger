@@ -7,7 +7,7 @@ Lambda is configured to run a Docker container. When Terraform tries to create t
 So the order is:
 1. Create ECR (the storage) with Terraform
 2. Push a Docker image into ECR (fill the storage)
-3. Create Lambda with Terraform (now it can find the image)
+3. Create Lambda with Terraform (now it can find the image).
 
 This is a one-time chicken-and-egg problem. After the initial setup, the CI/CD pipeline handles the build → push → deploy cycle automatically.
 
