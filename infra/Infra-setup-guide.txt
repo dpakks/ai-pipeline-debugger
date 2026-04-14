@@ -11,7 +11,7 @@ So the order is:
 
 This is a one-time chicken-and-egg problem. After the initial setup, the CI/CD pipeline handles the build → push → deploy cycle automatically.
 
----
+
 
 ## Step-by-step: What we did
 
