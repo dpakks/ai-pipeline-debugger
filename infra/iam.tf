@@ -56,7 +56,7 @@ resource "aws_iam_role_policy" "lambda_bedrock" {
         Action = [
           "bedrock:InvokeModel"
         ]
-        Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/${var.bedrock_model_id}"
+        Resource = "*"
       }
     ]
   })
