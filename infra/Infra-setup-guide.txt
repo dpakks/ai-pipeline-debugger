@@ -71,10 +71,10 @@ docker push 980921745255.dkr.ecr.us-east-1.amazonaws.com/cicd-debugger:latest
 
 Uncommented everything in `lambda.tf`, `api_gateway.tf`, and `outputs.tf`.
 
-```bash
+`````bash
 cd infra
 terraform apply -auto-approve
-```
+`````
 
 This created: Lambda function, API Gateway integration + route, Lambda permission.
 
